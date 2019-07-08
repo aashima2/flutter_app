@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "694394509884",
+    "firebase_url": "https://futter-dynamic-form.firebaseio.com",
+    "project_id": "futter-dynamic-form",
+    "storage_bucket": "futter-dynamic-form.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:694394509884:android:072b48f3c7cbda3e",
+        "android_client_info": {
+          "package_name": "com.example.flutter_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "694394509884-2480ta1u0bkhifn3nfq5rdg7cmlmbi0g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzkVlxYSFlwPcgF0uoZEgcfzf3QhTdng8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "694394509884-2480ta1u0bkhifn3nfq5rdg7cmlmbi0g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
