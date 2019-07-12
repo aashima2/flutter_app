@@ -34,33 +34,32 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _controller = new TextEditingController();
+
   DateTime _date = new DateTime.now();
   bool value1 = false;
   bool value2 = false;
-
-
-  String _dateformat ;
+  String _dateformat;
 
   var items = ['Male', 'Female', 'Rather nor say'];
-
   List<Container> myForms = [];
+  Map<String, dynamic> result = Map<String, dynamic>();
 
   var d;
-  String Name;
-  String Age;
-  String Email;
-  String Phonenumber;
 
   var type = '';
   Map data;
 
+  var id = [];
   double Rating;
 
-//String url = 'https://api.myjson.com/bins/gj89b';
   Future getData() async {
-    http.Response response =
-        await http.get('https://api.myjson.com/bins/1cdtvh');
+//    http.Response response =
+//        await http.get('https://api.myjson.com/bins/1cdtvh');//  real data
+//    http.Response response =
+////    await http.get('https://api.myjson.com/bins/c3lyn');// for  date field
+//    http.Response response =await http.get('https://api.myjson.com/bins/n021r');
+    http.Response response = await http.get('https://api.myjson.com/bins/14mp9r');
+
     debugPrint(response.body);
     data = json.decode(response.body);
     debugPrint(data["fields"].toString());
@@ -87,35 +86,26 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-
   @override
   void initState() {
     _dateformat = "${_date.month}/${_date.day}/${_date.year}";
-
-
     getData();
   }
 
   int i;
   int j;
- adddata(){
-   CollectionReference reference = Firestore.instance.collection("userdata");
-   reference.add({
-     "Name" : Name,
-     "Gender": _controller.text,
-     "age": Age,
-     "EmailAddress": Email,
-     "Phonenumber": Phonenumber,
-     "Rating": Rating,
-     "Date of visit": _dateformat,
-   });
- }
+
+
+  adddata() {
+    CollectionReference reference = Firestore.instance.collection("userdata");
+    reference.add(result);
+  }
+
   buildForm() {
     for (int val = 0; val < data["fields"].length; val++) {
-      String value = data["fields"][val]["type" ];
+      String value = data["fields"][val]["type"];
+      final TextEditingController _controller = new TextEditingController();
       print(value);
-//       String id  = data["fields"][val]["id"];
-//      print(id);
       switch (value) {
         case "short_text":
           myForms.add(Container(
@@ -123,9 +113,8 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: const EdgeInsets.all(20.0),
               child: TextFormField(
                 onSaved: (String name) {
-                  Name = name;
+                  result[data["fields"][val]["id"]] = name;
 
-                  print(Name);
                 },
                 validator: (d) {
                   if (d.isEmpty ||
@@ -164,7 +153,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       icon: const Icon(Icons.arrow_drop_down),
                       onSelected: (String value) {
                         _controller.text = value;
-                        print(_controller.text);
+                        setState(() {
+                          result[data["fields"][val]["id"]] = value;
+                          print(_controller.text);
+
+                        });
+
                       },
                       itemBuilder: (BuildContext context) {
                         return items.map<PopupMenuItem<String>>((String value) {
@@ -183,8 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: const EdgeInsets.all(20.0),
               child: TextFormField(
                 onSaved: (String age) {
-                  Age = age;
-                  print(Age);
+                  result[data["fields"][val]["id"]] = age;
                 },
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(2),
@@ -210,9 +203,9 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: TextFormField(
+                key: UniqueKey(),
                 onSaved: (String email) {
-                  Email = email;
-                  print(Email);
+                  result[data["fields"][val]["id"]] = email;
                 },
                 keyboardType: TextInputType.emailAddress,
                 validator: (d) {
@@ -242,21 +235,22 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
                 keyboardType: TextInputType.number,
                 onSaved: (String phonenumber) {
-                  Phonenumber = phonenumber;
-                  print(phonenumber);
+                  result[data["fields"][val]["id"]] = phonenumber;
                 },
-                validator: (d) {
-                  String patttern = r'(^(?:[+0]9)?[0-9]{10,12}$)';
-                  RegExp regExp = new RegExp(patttern);
-                  if (d.isEmpty) {
-                    return 'Please enter mobile number';
-                  }
-                  else if (!regExp.hasMatch(d)) {
-                    return 'Please enter valid mobile number';
-                  }
-                  return null;
+                 validator: (d){
+                  data["fields"][val]["validations"]=d;
 
-                  },
+                 },
+//                validator: (d) {
+//                  String patttern = r'(^(?:[+0]9)?[0-9]{10,12}$)';
+//                  RegExp regExp = new RegExp(patttern);
+//                  if (d.isEmpty) {
+//                    return 'Please enter mobile number';
+//                  } else if (!regExp.hasMatch(d)) {
+//                    return 'Please enter valid mobile number';
+//                  }
+//                  return null;
+//                },
                 decoration: InputDecoration(
                     hintText: data["fields"][val]["title"],
                     border: OutlineInputBorder()),
@@ -272,135 +266,137 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 Padding(
                   padding: const EdgeInsets.all(20.0),
-                  child: Text(data["fields"][val]["title"],style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15.0),),
+                  child: Text(
+                    data["fields"][val]["title"],
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 15.0),
+                  ),
                 ),
                 FlutterRatingBar(
-                  initialRating: 3,
+                    initialRating: 3,
                     fillColor: Colors.orange,
                     borderColor: Colors.orange.withAlpha(50),
                     allowHalfRating: true,
-                    onRatingUpdate: (rating){
-                    Rating = rating;
-                    print(rating);
-                    }
-                ),
-              ],
-            ),
-
-          ));
-          break;
-          case "date":
-          myForms.add(Container(
-            child: Row(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(25.0),
-                  child: Text(
-                    data["fields"][val]["title"],
-                    style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15.0),
-                  ),
-                ),
-                Text(
-                   _dateformat
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left : 75.0),
-                  child: IconButton(
-                      icon: Icon(Icons.calendar_today),
-
-                      onPressed: () {
-                        _selectdate(context);
-                      }),
-                )
+                    onRatingUpdate: (rating) {
+                      result[data["fields"][val]["id"]] = rating;
+                    }),
               ],
             ),
           ));
           break;
-          case "yes_no":
-          myForms.add(Container(
-            child: Column(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Text(
-                    data["fields"][val]["title"],
-                    style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15.0),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    Column(
-                      children: <Widget>[
-                        Text("yes"),
-                        Checkbox(
-                            value: value1,
-                            onChanged: (bool valueyes) {
-                              setState(() {
-                                value1 = valueyes;
-                                print(value1);
-                              });
-
-                            }),
-                      ],
-                    ),
-                    Column(
-                      children: <Widget>[
-                        Column(
-                          children: <Widget>[
-                            Text("No"),
-                            Checkbox(
-                                value: value2,
-                                onChanged: (bool valueno) {
-                                  setState(() {
-                                    value2 = valueno;
-                                    print(value2);
-
-                                  });
-                                }),
-                          ],
-                        )
-                      ],
-                    )
-                  ],
-                )
-              ],
-            ),
-          ));
+//        case "date":
+//          myForms.add(Container(
+//            child: Row(
+//              children: <Widget>[
+//                Padding(
+//                  padding: const EdgeInsets.all(25.0),
+//                  child: Text(
+//                    data["fields"][val]["title"],
+//                    style:
+//                        TextStyle(fontWeight: FontWeight.bold, fontSize: 15.0),
+//                  ),
+//                ),
+//                Text(
+//                  result[data["fields"][val]["id"]] = _dateformat,
+//
+//                ),
+//                Padding(
+//                  padding: const EdgeInsets.only(left: 75.0),
+//                  child: IconButton(
+//                      icon: Icon(Icons.calendar_today),
+//                      onPressed: () {
+//                        _selectdate(context);
+//                      }),
+//                )
+//              ],
+//            ),
+//          ));
+          break;
+//        case "yes_no":
+//          myForms.add(Container(
+//            child: Column(
+//              children: <Widget>[
+//                Padding(
+//                  padding: const EdgeInsets.all(20.0),
+//                  child: Text(
+//                    data["fields"][val]["title"],
+//                    style:
+//                        TextStyle(fontWeight: FontWeight.bold, fontSize: 15.0),
+//                  ),
+//                ),
+//                Row(
+//                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//                  children: <Widget>[
+//                    Column(
+//                      children: <Widget>[
+//                        Text("yes"),
+//                        Checkbox(
+//                            value: value1,
+//                            onChanged: (bool valueyes) {
+//                              setState(() {
+//                                value1 = valueyes;
+//                                print(value1);
+//                              });
+//                            }),
+//                      ],
+//                    ),
+//                    Column(
+//                      children: <Widget>[
+//                        Column(
+//                          children: <Widget>[
+//                            Text("No"),
+//                            Checkbox(
+//                                value: value2,
+//                                onChanged: (bool valueno) {
+//                                  setState(() {
+//                                    value2 = valueno;
+//                                    print(value2);
+//                                  });
+//                                }),
+//                          ],
+//                        )
+//                      ],
+//                    )
+//                  ],
+//                )
+//              ],
+//            ),
+//          ));
       }
     }
-    setState(() {
-
-    });
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
         ),
-        body: Form(
-            key: _formKey,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ListView(
-                children: [
-                  ...myForms,
-                  FlatButton(
-                    child: Text("Submit"),
-                    onPressed: () {
-                      if (!_formKey.currentState.validate()) {
-                        return;
-                      }
-                      _formKey.currentState.save();
-                      adddata();
-
-                    },
-                  )
-                ],
-              ),
-            )));
+        body: SingleChildScrollView(
+          child: Container(
+            child: Form(
+                key: _formKey,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      ...myForms,
+                      FlatButton(
+                        child: Text("Submit"),
+                        onPressed: () {
+                          if (_formKey.currentState.validate()) {
+                            _formKey.currentState.save();
+                            adddata();
+                            print(d);
+                            print(result);
+                          }
+                        },
+                      )
+                    ],
+                  ),
+                )),
+          ),
+        ));
   }
 }
